@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oficina Pedagógica - Repositório Educativo Aberto</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase Client JS via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .temp-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 9999px;
+      outline: none;
+      background: linear-gradient(
+        to right,
+        #7B00EA 0%,
+        #0033FF 16%,
+        #00C8FF 32%,
+        #00E600 48%,
+        #FFEA00 64%,
+        #FF7A00 80%,
+        #FF0000 100%
+      );
+    }
+    .temp-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      cursor: pointer;
+      border: 3px solid currentColor;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15), 0 3px 8px rgba(0, 0, 0, 0.25);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .temp-slider::-webkit-slider-thumb:hover,
+    .temp-slider:focus-visible::-webkit-slider-thumb {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .temp-slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      cursor: pointer;
+      border: 3px solid currentColor;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15), 0 3px 8px rgba(0, 0, 0, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/50 text-slate-900 antialiased min-h-screen flex flex-col font-sans">
+  <div id="root" class="flex flex-col min-h-screen"></div>
+
+  <!-- React 18 & Babel para execução autônoma num único ficheiro -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+    // =========================================================================
+    // CONFIGURAÇÃO DO SUPABASE
+    // Conexão integrada e ativa com o banco PostgreSQL na nuvem
+    // =========================================================================
+    const SUPABASE_URL = 'https://cdlrdveezmyrmjrpxckm.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_7hCiZLB5zM1IJ2HLsHPo4A_QU3IEid-';
+
+    // Inicialização segura do cliente Supabase
+    const isSupabaseConfigured = Boolean(
+      SUPABASE_URL && 
+      SUPABASE_ANON_KEY && 
+      SUPABASE_ANON_KEY.trim().length > 10 &&
+      window.supabase
+    );
+
+    let supabaseClient = null;
+    if (isSupabaseConfigured) {
+      try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY.trim());
+      } catch (err) {
+        console.error('Erro ao conectar com Supabase:', err);
+      }
+    }
+
+    // Identificador único do usuário anônimo (para votação justa)
+    function getOrCreateClientToken() {
+      try {
+        let token = localStorage.getItem('edu-client-token');
+        if (!token) {
+          token = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+            ? crypto.randomUUID() 
+            : 'usr-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem('edu-client-token', token);
+        }
+        return token;
+      } catch (e) {
+        return 'usr-guest-' + Date.now();
+      }
+    }
+
+    const CATEGORIES = [
+      { slug: 'ia', label: 'IA' },
+      { slug: 'simulador', label: 'Simulador' },
+      { slug: 'livro-aberto', label: 'Livro Aberto' },
+      { slug: 'software-livre', label: 'Software Livre' },
+      { slug: 'plataforma', label: 'Plataforma' },
+      { slug: 'ferramenta', label: 'Ferramenta' }
+    ];
+
+    const SEED_RESOURCES = [
+      { id: 'r1', title: 'Khan Academy', url: 'https://pt.khanacademy.org', normalized_url: 'https://pt.khanacademy.org', category: 'plataforma', description: 'Plataforma gratuita com milhares de aulas em matemática, ciências, programação e muito mais.', tags: ['vídeo-aulas','exercícios','ensino'], score: 12, created_at: '2024-01-15T08:00:00Z' },
+      { id: 'r2', title: 'PhET Simulations', url: 'https://phet.colorado.edu', normalized_url: 'https://phet.colorado.edu', category: 'simulador', description: 'Simulações interativas de física, química, biologia e matemática da Universidade do Colorado.', tags: ['física','química','interativo'], score: 9, created_at: '2024-01-20T10:30:00Z' },
+      { id: 'r3', title: 'Duolingo', url: 'https://www.duolingo.com', normalized_url: 'https://www.duolingo.com', category: 'plataforma', description: 'Aprendizagem de línguas gamificada. Mais de 40 idiomas disponíveis de forma interativa.', tags: ['idiomas','gamificação','app'], score: 8, created_at: '2024-02-01T14:00:00Z' },
+      { id: 'r4', title: 'GeoGebra', url: 'https://www.geogebra.org', normalized_url: 'https://www.geogebra.org', category: 'software-livre', description: 'Matemática dinâmica: álgebra, geometria, folha de cálculo e cálculo num único ambiente.', tags: ['matemática','geometria','open-source'], score: 11, created_at: '2024-01-10T09:15:00Z' },
+      { id: 'r5', title: 'Wikimedia Commons', url: 'https://commons.wikimedia.org', normalized_url: 'https://commons.wikimedia.org', category: 'ferramenta', description: 'Repositório central de imagens, sons e vídeos de uso livre para projetos educativos.', tags: ['multimédia','imagens','domínio-público'], score: 5, created_at: '2024-02-10T11:00:00Z' },
+      { id: 'r6', title: 'ChatGPT (OpenAI)', url: 'https://chatgpt.com', normalized_url: 'https://chatgpt.com', category: 'ia', description: 'Assistente de IA generativa para esclarecimento de dúvidas, criação de planos de aula e revisão de textos.', tags: ['llm','tutor','produtividade'], score: 15, created_at: '2024-03-01T08:00:00Z' },
+      { id: 'r7', title: 'LibreTexts', url: 'https://libretexts.org', normalized_url: 'https://libretexts.org', category: 'livro-aberto', description: 'Biblioteca colaborativa de manuais escolares abertos em ciências exatas e humanas.', tags: ['oer','universidade','manuais'], score: 7, created_at: '2024-01-25T16:45:00Z' },
+      { id: 'r8', title: 'Desmos', url: 'https://www.desmos.com', normalized_url: 'https://www.desmos.com', category: 'ferramenta', description: 'Calculadora gráfica avançada e atividades matemáticas interativas para a sala de aula.', tags: ['matemática','gráficos','calculadora'], score: 6, created_at: '2024-02-14T13:20:00Z' },
+      { id: 'r9', title: 'MIT OpenCourseWare', url: 'https://ocw.mit.edu', normalized_url: 'https://ocw.mit.edu', category: 'plataforma', description: 'Material completo de cursos do MIT: apontamentos, testes e vídeos gratuitos.', tags: ['engenharia','universidade','cursos'], score: 10, created_at: '2024-01-05T07:30:00Z' },
+      { id: 'r10', title: 'Scratch', url: 'https://scratch.mit.edu', normalized_url: 'https://scratch.mit.edu', category: 'software-livre', description: 'Linguagem de programação visual desenvolvida pelo MIT para crianças e jovens.', tags: ['programação','iniciação','blocos'], score: 13, created_at: '2024-01-08T10:00:00Z' },
+      { id: 'r11', title: 'Perplexity AI', url: 'https://www.perplexity.ai', normalized_url: 'https://www.perplexity.ai', category: 'ia', description: 'Motor de busca conversacional com citações e fontes em tempo real para investigação académica.', tags: ['investigação','citações','pesquisa'], score: 14, created_at: '2024-03-10T09:00:00Z' },
+      { id: 'r12', title: 'PhET Simulações em Português', url: 'https://phet.colorado.edu/pt_BR', normalized_url: 'https://phet.colorado.edu/pt_br', category: 'simulador', description: 'Simulações científicas traduzidas para português, ideais para o ensino básico e secundário.', tags: ['física','química','traduzido'], score: 4, created_at: '2024-02-20T15:00:00Z' },
+      { id: 'r13', title: 'OpenStax', url: 'https://openstax.org', normalized_url: 'https://openstax.org', category: 'livro-aberto', description: 'Editora sem fins lucrativos da Rice University com manuais universitários gratuitos e revistos por pares.', tags: ['universidade','manuais','gratuito'], score: 8, created_at: '2024-01-12T11:10:00Z' },
+      { id: 'r14', title: 'Obsidian', url: 'https://obsidian.md', normalized_url: 'https://obsidian.md', category: 'ferramenta', description: 'Aplicação de notas em Markdown com ligações bidirecionais para gestão pessoal do conhecimento.', tags: ['notas','markdown','produtividade'], score: 7, created_at: '2024-03-05T08:45:00Z' },
+      { id: 'r15', title: 'Moodle', url: 'https://moodle.org', normalized_url: 'https://moodle.org', category: 'software-livre', description: 'Sistema de gestão de aprendizagem (LMS) open-source amplamente utilizado em escolas e universidades.', tags: ['lms','elearning','gestão'], score: 6, created_at: '2024-02-28T14:20:00Z' },
+      { id: 'r16', title: 'Replit', url: 'https://replit.com', normalized_url: 'https://replit.com', category: 'plataforma', description: 'IDE online colaborativo com suporte a mais de 50 linguagens e ambientes de ensino partilhados.', tags: ['programação','ide','colaborativo'], score: 9, created_at: '2024-03-15T10:00:00Z' },
+      { id: 'r17', title: 'Project Gutenberg', url: 'https://www.gutenberg.org', normalized_url: 'https://www.gutenberg.org', category: 'livro-aberto', description: 'Mais de 70 mil livros digitais em domínio público, incluindo grandes clássicos da literatura mundial.', tags: ['literatura','ebooks','domínio-público'], score: 5, created_at: '2024-01-18T09:30:00Z' }
+    ];
+
+    function scoreToTemp(score) {
+      return Math.round(Math.min(100, Math.max(0, 50 + (score || 0) * 4)));
+    }
+
+    function normalizeUrl(rawUrl) {
+      if (!rawUrl) return '';
+      try {
+        const u = new URL(rawUrl.trim());
+        u.hash = '';
+        if (u.pathname.length > 1 && u.pathname.endsWith('/')) {
+          u.pathname = u.pathname.slice(0, -1);
+        }
+        return u.toString().toLowerCase();
+      } catch (e) {
+        return rawUrl.trim().toLowerCase();
+      }
+    }
+
+    function isValidHttpsUrl(string) {
+      try {
+        const url = new URL(string);
+        return url.protocol === 'https:' && Boolean(url.hostname);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function sanitize(str) {
+      if (!str) return '';
+      return str.replace(/[<>]/g, '').trim();
+    }
+
+    function canPerform(key, cooldownMs) {
+      try {
+        const raw = localStorage.getItem('rl-' + key);
+        const last = raw ? parseInt(raw, 10) : 0;
+        const now = Date.now();
+        if (now - last < cooldownMs) return false;
+        localStorage.setItem('rl-' + key, String(now));
+        return true;
+      } catch (e) {
+        return true;
+      }
+    }
+
+    function uuid() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+      return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+    }
+
+    function getSliderColor(val) {
+      const stops = [
+        { p: 0,   r: 123, g: 0,   b: 234 },
+        { p: 16,  r: 0,   g: 51,  b: 255 },
+        { p: 32,  r: 0,   g: 200, b: 255 },
+        { p: 48,  r: 0,   g: 230, b: 0   },
+        { p: 64,  r: 255, g: 234, b: 0   },
+        { p: 80,  r: 255, g: 122, b: 0   },
+        { p: 100, r: 255, g: 0,   b: 0   }
+      ];
+      if (val <= stops[0].p) return '#7B00EA';
+      if (val >= stops[stops.length-1].p) return '#FF0000';
+      for (let i = 0; i < stops.length - 1; i++) {
+        if (val >= stops[i].p && val <= stops[i+1].p) {
+          const t = (val - stops[i].p) / (stops[i+1].p - stops[i].p);
+          const rr = Math.round(stops[i].r + (stops[i+1].r - stops[i].r) * t);
+          const gg = Math.round(stops[i].g + (stops[i+1].g - stops[i].g) * t);
+          const bb = Math.round(stops[i].b + (stops[i+1].b - stops[i].b) * t);
+          return '#' + [rr, gg, bb].map(x => x.toString(16).padStart(2, '0')).join('');
+        }
+      }
+      return '#FF0000';
+    }
+
+    function Icon({ children, cls }) {
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={cls || 'h-4 w-4'}
+          aria-hidden="true"
+        >
+          {children}
+        </svg>
+      );
+    }
+    function IcoSearch({ cls }) { return <Icon cls={cls}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></Icon>; }
+    function IcoX({ cls }) { return <Icon cls={cls}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></Icon>; }
+    function IcoPlus({ cls }) { return <Icon cls={cls}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></Icon>; }
+    function IcoLink({ cls }) { return <Icon cls={cls}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></Icon>; }
+    function IcoSearchX({ cls }) { return <Icon cls={cls}><path d="m13.5 8.5-5 5" /><path d="m8.5 8.5 5 5" /><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></Icon>; }
+    function IcoInfo({ cls }) { return <Icon cls={cls}><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></Icon>; }
+    function IcoGlobe({ cls }) { return <Icon cls={cls}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></Icon>; }
+    function IcoMoreVertical({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <circle cx="12" cy="12" r="1.5" />
+          <circle cx="12" cy="5" r="1.5" />
+          <circle cx="12" cy="19" r="1.5" />
+        </Icon>
+      );
+    }
+    function IcoThermometer({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+        </Icon>
+      );
+    }
+    function IcoChevronDown({ cls }) {
+      return <Icon cls={cls}><polyline points="6 9 12 15 18 9" /></Icon>;
+    }
+    function IcoAlert({ cls }) {
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="#EF4444"
+          stroke="white"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={cls || 'h-4 w-4'}
+          aria-hidden="true"
+        >
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      );
+    }
+
+    function InfoTooltip({ text }) {
+      const [isOpen, setIsOpen] = useState(false);
+      const containerRef = useRef(null);
+
+      useEffect(() => {
+        if (!isOpen) return;
+
+        function handleClickOutside(event) {
+          if (containerRef.current && !containerRef.current.contains(event.target)) {
+            setIsOpen(false);
+          }
+        }
+
+        function handleKeyDown(event) {
+          if (event.key === 'Escape') setIsOpen(false);
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+          document.removeEventListener('touchstart', handleClickOutside);
+          document.removeEventListener('keydown', handleKeyDown);
+        };
+      }, [isOpen]);
+
+      return (
+        <div className="relative inline-flex items-center" ref={containerRef}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsOpen((prev) => !prev);
+            }}
+            onMouseEnter={() => setIsOpen(true)}
+            onMouseLeave={() => setIsOpen(false)}
+            aria-label="Informações sobre a temperatura"
+            aria-expanded={isOpen}
+            className="rounded-full p-0.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <IcoInfo cls="h-3.5 w-3.5" />
+          </button>
+
+          {isOpen && (
+            <div
+              role="tooltip"
+              className="absolute bottom-full left-1/2 mb-2 w-56 -translate-x-1/2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-[11px] leading-relaxed text-white shadow-2xl z-50 pointer-events-auto select-none"
+            >
+              {text}
+              <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function ToastContainer({ toasts, onCloseToast }) {
+      if (!toasts.length) return null;
+      return (
+        <div className="fixed top-4 right-4 z-[120] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              role="alert"
+              className={`pointer-events-auto flex items-center justify-between gap-3 p-3 rounded-xl border shadow-lg text-sm backdrop-blur transition-all duration-300 ${
+                toast.type === 'error'
+                  ? 'bg-red-50 border-red-200 text-red-800'
+                  : toast.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-slate-900 border-slate-800 text-white'
+              }`}
+            >
+              <div className="flex-1 font-medium">{toast.message}</div>
+              <button
+                onClick={() => onCloseToast(toast.id)}
+                className="p-1 rounded-lg opacity-70 hover:opacity-100 transition focus:outline-none"
+                aria-label="Fechar notificação"
+              >
+                <IcoX cls="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function ResourceFavicon({ domain }) {
+      const [imgFailed, setImgFailed] = useState(false);
+      if (imgFailed || !domain) {
+        return (
+          <div className="h-6 w-6 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
+            <IcoGlobe cls="h-3.5 w-3.5" />
+          </div>
+        );
+      }
+      return (
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`}
+          alt=""
+          className="h-6 w-6 rounded object-contain shrink-0 bg-white"
+          onError={() => setImgFailed(true)}
+        />
+      );
+    }
+
+    function Thermometer({ resource, userVote, onVote }) {
+      const initialVal = userVote !== undefined ? userVote : 50;
+      const [val, setVal] = useState(initialVal);
+      const debounceRef = useRef(null);
+
+      useEffect(() => {
+        if (userVote !== undefined) {
+          setVal(userVote);
+        }
+      }, [userVote]);
+
+      const color = getSliderColor(val);
+      const communityTemp = scoreToTemp(resource.score);
+
+      const commitVote = useCallback((targetValue) => {
+        onVote(resource.id, targetValue);
+      }, [onVote, resource.id]);
+
+      function handleChange(e) {
+        const newVal = parseInt(e.target.value, 10);
+        setVal(newVal);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          commitVote(newVal);
+        }, 350);
+      }
+
+      function handleCommit() {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        commitVote(val);
+      }
+
+      return (
+        <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-700">A sua avaliação:</span>
+              <InfoTooltip text="Avalie de 0° (frio/pouco útil) a 100° (fervendo/excelente) para ajudar outros professores." />
+            </div>
+            <span 
+              className="text-sm font-extrabold tabular-nums px-1.5 py-0.5 rounded bg-white border shadow-xs" 
+              style={{ color }}
+            >
+              {val}°
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={val}
+            onChange={handleChange}
+            onMouseUp={handleCommit}
+            onTouchEnd={handleCommit}
+            onKeyUp={handleCommit}
+            aria-label={`Temperatura do recurso ${resource.title}`}
+            aria-valuenow={val}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            className="temp-slider focus:outline-none"
+            style={{ color }}
+          />
+
+          <div className="mt-1.5 flex justify-between text-[10px] font-medium text-slate-400 select-none">
+            <span>0° (Frio)</span>
+            <span>50°</span>
+            <span>100° (Fervendo)</span>
+          </div>
+
+          <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500">
+            <span className="font-medium">Média da comunidade:</span>
+            <span className="font-bold tabular-nums text-slate-800 bg-slate-200/70 px-1.5 py-0.5 rounded">
+              {communityTemp}°
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    function ResourceCard({ resource, userVote, onVote, onTagClick, onReport }) {
+      const [menuOpen, setMenuOpen] = useState(false);
+      const [evalOpen, setEvalOpen] = useState(false);
+      const menuRef = useRef(null);
+      const evalRef = useRef(null);
+
+      const domain = useMemo(() => {
+        try { return new URL(resource.url).hostname; } catch (e) { return ''; }
+      }, [resource.url]);
+
+      const communityTemp = useMemo(() => scoreToTemp(resource.score), [resource.score]);
+
+      useEffect(() => {
+        if (!menuOpen) return;
+        function handleClickOutside(e) {
+          if (menuRef.current && !menuRef.current.contains(e.target)) {
+            setMenuOpen(false);
+          }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+          document.removeEventListener('touchstart', handleClickOutside);
+        };
+      }, [menuOpen]);
+
+      useEffect(() => {
+        if (!evalOpen) return;
+        function handleClickOutside(e) {
+          if (evalRef.current && !evalRef.current.contains(e.target)) {
+            setEvalOpen(false);
+          }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+          document.removeEventListener('touchstart', handleClickOutside);
+        };
+      }, [evalOpen]);
+
+      return (
+        <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-slate-300">
+          <div>
+            <div className="flex items-start justify-between gap-2 mb-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <ResourceFavicon domain={domain} />
+                <div className="min-w-0">
+                  <h3 className="truncate text-base font-bold text-slate-900" title={resource.title}>
+                    {resource.title}
+                  </h3>
+                  <span className="text-[11px] text-slate-400 truncate block">
+                    {domain.replace('www.', '')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="rounded-full bg-slate-100 border border-slate-200/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                  {resource.category}
+                </span>
+
+                <div className="relative" ref={menuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen((prev) => !prev)}
+                    className="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                    title="Mais opções"
+                    aria-label={`Mais opções para ${resource.title}`}
+                    aria-expanded={menuOpen}
+                  >
+                    <IcoMoreVertical cls="h-4 w-4" />
+                  </button>
+
+                  {menuOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-60 rounded-xl border border-slate-200 bg-white p-1 shadow-xl z-40">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onReport(resource.id, resource.title);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                      >
+                        <IcoAlert cls="h-3.5 w-3.5 shrink-0" />
+                        <span>Denunciar recurso impróprio ou quebrado</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-sm leading-relaxed text-slate-600 line-clamp-3 mb-3">
+              {resource.description}
+            </p>
+
+            {resource.tags && resource.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-4" aria-label="Tags do recurso">
+                {resource.tags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => onTagClick(tag)}
+                    className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+                    title={`Filtrar por #${tag}`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2.5 mt-auto">
+            <div ref={evalRef} className="relative">
+              {evalOpen && (
+                <div className="mb-2 animate-in fade-in duration-200">
+                  <Thermometer 
+                    resource={resource} 
+                    userVote={userVote} 
+                    onVote={onVote} 
+                  />
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setEvalOpen((prev) => !prev)}
+                className={`w-full inline-flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition mt-2 ${
+                  evalOpen
+                    ? 'border-blue-300 bg-blue-50/70 text-blue-800 shadow-2xs'
+                    : 'border-slate-200 bg-slate-50/80 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+                aria-expanded={evalOpen}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <IcoThermometer cls={`h-3.5 w-3.5 ${evalOpen ? 'text-blue-600' : 'text-slate-500'}`} />
+                  <span>Avaliar</span>
+                </span>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold tabular-nums text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200/80">
+                    {communityTemp}°
+                  </span>
+                  <IcoChevronDown
+                    cls={`h-3.5 w-3.5 transition-transform duration-200 ${
+                      evalOpen ? 'text-blue-600' : 'rotate-180 text-slate-400'
+                    }`}
+                  />
+                </div>
+              </button>
+            </div>
+
+            <a
+              href={resource.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2 px-3 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              <span>Acessar recurso</span>
+              <IcoLink cls="h-3.5 w-3.5 text-slate-400" />
+            </a>
+          </div>
+        </article>
+      );
+    }
+
+    function FilterPills({ active, onChange }) {
+      return (
+        <div 
+          className="flex gap-2 overflow-x-auto scrollbar-hide py-2"
+          role="tablist"
+          aria-label="Filtrar por categoria"
+        >
+          <button
+            role="tab"
+            aria-selected={active === null}
+            onClick={() => onChange(null)}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 ${
+              active === null
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            Todas as Categorias
+          </button>
+          {CATEGORIES.map((c) => (
+            <button
+              key={c.slug}
+              role="tab"
+              aria-selected={active === c.slug}
+              onClick={() => onChange(active === c.slug ? null : c.slug)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 ${
+                active === c.slug
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    function TopBar({ query, onQueryChange, sortKey, onSortChange, allTags, activeTag, onTagChange }) {
+      return (
+        <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-md shadow-2xs">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <IcoSearch cls="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => onQueryChange(e.target.value)}
+                placeholder="Pesquisar por título, descrição ou termos pedagógicos..."
+                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={activeTag || ''}
+                onChange={(e) => onTagChange(e.target.value || null)}
+                aria-label="Filtrar por tag"
+                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="">Todas as tags ({allTags.length})</option>
+                {allTags.map((t) => (
+                  <option key={t} value={t}>#{t}</option>
+                ))}
+              </select>
+
+              <select
+                value={sortKey}
+                onChange={(e) => onSortChange(e.target.value)}
+                aria-label="Ordenar recursos"
+                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="hot">Mais Quentes 🔥</option>
+                <option value="recent">Mais Recentes 🕒</option>
+                <option value="alpha">Ordem Alfabética (A-Z)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function SubmitModal({ open, onClose, onSubmit, categories, isDuplicateUrl }) {
+      const [form, setForm] = useState({ title: '', url: '', category: '', tags: '', description: '' });
+      const [errors, setErrors] = useState({});
+      const [submitting, setSubmitting] = useState(false);
+
+      useEffect(() => {
+        if (!open) {
+          setForm({ title: '', url: '', category: '', tags: '', description: '' });
+          setErrors({});
+          setSubmitting(false);
+        }
+      }, [open]);
+
+      function validate() {
+        const e = {};
+        const title = sanitize(form.title);
+        const description = sanitize(form.description);
+        const url = form.url.trim();
+
+        if (title.length < 3 || title.length > 80) {
+          e.title = 'O título deve ter entre 3 e 80 carateres.';
+        }
+
+        if (!isValidHttpsUrl(url)) {
+          e.url = 'Insira um URL seguro e válido (começado obrigatoriamente por https://).';
+        } else if (isDuplicateUrl(url)) {
+          e.url = 'Este recurso/link já se encontra registado no repositório.';
+        }
+
+        if (!form.category) {
+          e.category = 'Selecione uma categoria correspondente.';
+        }
+
+        if (description.length < 10 || description.length > 150) {
+          e.description = 'A descrição deve ter entre 10 e 150 carateres.';
+        }
+
+        setErrors(e);
+        return Object.keys(e).length === 0;
+      }
+
+      async function handleSubmit(ev) {
+        ev.preventDefault();
+        if (!validate()) return;
+
+        if (!canPerform('submit', 8000)) {
+          setErrors({ global: 'Por favor, aguarde alguns segundos antes de submeter outro recurso.' });
+          return;
+        }
+
+        setSubmitting(true);
+        const norm = normalizeUrl(form.url);
+
+        const tagsArray = sanitize(form.tags)
+          .split(',')
+          .map((s) => s.trim().toLowerCase().replace(/^#/, ''))
+          .filter((s) => s.length > 1)
+          .slice(0, 5);
+
+        const payload = {
+          title: sanitize(form.title),
+          url: form.url.trim(),
+          normalized_url: norm,
+          category: form.category,
+          description: sanitize(form.description),
+          tags: tagsArray,
+          score: 0,
+          created_at: new Date().toISOString(),
+        };
+
+        await onSubmit(payload);
+        setSubmitting(false);
+        onClose();
+      }
+
+      if (!open) return null;
+
+      return (
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 id="modal-title" className="text-lg font-bold text-slate-900">Sugerir Novo Recurso</h2>
+                <p className="text-xs text-slate-500">Partilhe uma ferramenta aberta com a comunidade docente.</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                aria-label="Fechar janela modal"
+              >
+                <IcoX cls="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              {errors.global && (
+                <div className="rounded-xl bg-red-50 p-3 text-xs font-semibold text-red-700 border border-red-200">
+                  {errors.global}
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Título do Recurso *</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
+                  className={`h-10 w-full rounded-xl border bg-slate-50/60 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 ${
+                    errors.title ? 'border-red-500' : 'border-slate-200'
+                  }`}
+                  placeholder="Ex: GeoGebra, PhET, Scratch..."
+                />
+                {errors.title && <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">URL Seguro (HTTPS) *</label>
+                <input
+                  type="url"
+                  value={form.url}
+                  onChange={(e) => setForm((s) => ({ ...s, url: e.target.value }))}
+                  className={`h-10 w-full rounded-xl border bg-slate-50/60 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 ${
+                    errors.url ? 'border-red-500' : 'border-slate-200'
+                  }`}
+                  placeholder="https://exemplo.org"
+                />
+                {errors.url && <span className="mt-1 block text-xs font-medium text-red-600">{errors.url}</span>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Categoria Pedagógica *</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))}
+                  className={`h-10 w-full rounded-xl border bg-white px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${
+                    errors.category ? 'border-red-500' : 'border-slate-200'
+                  }`}
+                >
+                  <option value="">Selecione uma categoria...</option>
+                  {categories.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.label}</option>
+                  ))}
+                </select>
+                {errors.category && <span className="mt-1 block text-xs font-medium text-red-600">{errors.category}</span>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Tags (separadas por vírgulas)</label>
+                <input
+                  type="text"
+                  value={form.tags}
+                  onChange={(e) => setForm((s) => ({ ...s, tags: e.target.value }))}
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="matemática, física, secundário, robótica"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Descrição Curta *</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
+                  rows={3}
+                  maxLength={150}
+                  className={`w-full rounded-xl border bg-slate-50/60 p-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 ${
+                    errors.description ? 'border-red-500' : 'border-slate-200'
+                  }`}
+                  placeholder="Breve resumo da finalidade pedagógica (máx. 150 carateres)..."
+                />
+                <div className="mt-1 flex justify-between text-xs">
+                  {errors.description ? (
+                    <span className="font-medium text-red-600">{errors.description}</span>
+                  ) : <span />}
+                  <span className="text-slate-400 tabular-nums">{form.description.length}/150</span>
+                </div>
+              </div>
+
+              <div className="mt-2 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 transition"
+                >
+                  {submitting ? 'A submeter...' : 'Submeter Recurso'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    function ReportConfirmModal({ open, targetResource, onClose, onConfirm }) {
+      if (!open || !targetResource) return null;
+      return (
+        <div 
+          className="fixed inset-0 z-[115] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="flex items-center gap-3 mb-3 text-red-600">
+              <IcoAlert cls="h-6 w-6" />
+              <h3 className="text-base font-bold text-slate-900">Denunciar Recurso</h3>
+            </div>
+            <p className="text-xs leading-relaxed text-slate-600 mb-4">
+              Pretende denunciar <strong>{targetResource.title}</strong>? Recursos repetidamente sinalizados são ocultados para garantir a fiabilidade da curadoria.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={onClose}
+                className="rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={onConfirm}
+                className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 shadow-sm transition"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [resources, setResources] = useState(() => {
+        try {
+          const saved = localStorage.getItem('edu-resources-v2');
+          return saved ? JSON.parse(saved) : SEED_RESOURCES;
+        } catch (e) {
+          return SEED_RESOURCES;
+        }
+      });
+
+      const [userVotes, setUserVotes] = useState(() => {
+        try {
+          const saved = localStorage.getItem('edu-votes-v2');
+          return saved ? JSON.parse(saved) : {};
+        } catch (e) {
+          return {};
+        }
+      });
+
+      const [reports, setReports] = useState(() => {
+        try {
+          const saved = localStorage.getItem('edu-reports-v2');
+          return saved ? JSON.parse(saved) : {};
+        } catch (e) {
+          return {};
+        }
+      });
+
+      const [searchQuery, setSearchQuery] = useState('');
+      const [debouncedQuery, setDebouncedQuery] = useState('');
+      const [activeCategory, setActiveCategory] = useState(null);
+      const [activeTag, setActiveTag] = useState(null);
+      const [sortKey, setSortKey] = useState('hot');
+      const [visibleCount, setVisibleCount] = useState(12);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [reportModalData, setReportModalData] = useState(null);
+      const [toasts, setToasts] = useState([]);
+      const [isSyncing, setIsSyncing] = useState(false);
+
+      const clientToken = useMemo(() => getOrCreateClientToken(), []);
+
+      const showToast = useCallback((message, type = 'info') => {
+        const id = uuid();
+        setToasts((prev) => [...prev, { id, message, type }]);
+        setTimeout(() => {
+          setToasts((prev) => prev.filter((t) => t.id !== id));
+        }, 4000);
+      }, []);
+
+      const closeToast = useCallback((id) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, []);
+
+      const fetchSupabaseData = useCallback(async () => {
+        if (!supabaseClient) return;
+        setIsSyncing(true);
+        try {
+          const { data, error } = await supabaseClient
+            .from('resources')
+            .select('*')
+            .eq('is_hidden', false)
+            .order('created_at', { ascending: false });
+
+          if (error) {
+            console.warn('Erro ao carregar dados do Supabase:', error.message);
+          } else if (data && data.length > 0) {
+            setResources(data);
+          } else if (data && data.length === 0) {
+            // Se a tabela estiver vazia, sincroniza a semente inicial no banco
+            for (const item of SEED_RESOURCES) {
+              await supabaseClient.from('resources').upsert({
+                title: item.title,
+                url: item.url,
+                normalized_url: item.normalized_url,
+                category: item.category,
+                description: item.description,
+                tags: item.tags,
+                score: item.score
+              }, { onConflict: 'normalized_url' });
+            }
+          }
+
+          // Carrega os votos já feitos por este cliente
+          const { data: voteData } = await supabaseClient
+            .from('votes')
+            .select('resource_id, vote_val')
+            .eq('client_token', clientToken);
+
+          if (voteData && voteData.length > 0) {
+            const voteMap = {};
+            voteData.forEach((v) => { voteMap[v.resource_id] = v.vote_val; });
+            setUserVotes((prev) => ({ ...prev, ...voteMap }));
+          }
+        } catch (err) {
+          console.error('Falha na sincronização remota:', err);
+        } finally {
+          setIsSyncing(false);
+        }
+      }, [clientToken]);
+
+      useEffect(() => {
+        if (isSupabaseConfigured) {
+          fetchSupabaseData();
+        }
+      }, [fetchSupabaseData]);
+
+      // Backup local sempre ativo
+      useEffect(() => {
+        try {
+          localStorage.setItem('edu-resources-v2', JSON.stringify(resources));
+        } catch (e) {}
+      }, [resources]);
+
+      useEffect(() => {
+        try {
+          localStorage.setItem('edu-votes-v2', JSON.stringify(userVotes));
+        } catch (e) {}
+      }, [userVotes]);
+
+      useEffect(() => {
+        try {
+          localStorage.setItem('edu-reports-v2', JSON.stringify(reports));
+        } catch (e) {}
+      }, [reports]);
+
+      useEffect(() => {
+        const timer = setTimeout(() => setDebouncedQuery(searchQuery), 250);
+        return () => clearTimeout(timer);
+      }, [searchQuery]);
+
+      useEffect(() => {
+        setVisibleCount(12);
+      }, [debouncedQuery, activeCategory, activeTag, sortKey]);
+
+      const allTags = useMemo(() => {
+        const tagSet = new Set();
+        resources.forEach((r) => {
+          if (Array.isArray(r.tags)) {
+            r.tags.forEach((t) => tagSet.add(t));
+          }
+        });
+        return Array.from(tagSet).sort();
+      }, [resources]);
+
+      const isDuplicateUrl = useCallback((rawUrl) => {
+        const norm = normalizeUrl(rawUrl);
+        return resources.some((r) => r.normalized_url === norm);
+      }, [resources]);
+
+      const filtered = useMemo(() => {
+        const q = debouncedQuery ? debouncedQuery.toLowerCase().trim() : '';
+
+        const list = resources.filter((r) => {
+          if ((reports[r.id] || 0) >= 4) return false;
+          if (activeCategory && r.category !== activeCategory) return false;
+          if (activeTag && (!r.tags || !r.tags.includes(activeTag))) return false;
+
+          if (q) {
+            const tagsText = (r.tags || []).join(' ');
+            const searchable = `${r.title} ${r.description} ${tagsText}`.toLowerCase();
+            if (!searchable.includes(q)) return false;
+          }
+          return true;
+        });
+
+        return list.sort((a, b) => {
+          if (sortKey === 'hot') {
+            return (b.score - a.score) || b.created_at.localeCompare(a.created_at);
+          }
+          if (sortKey === 'recent') {
+            return b.created_at.localeCompare(a.created_at);
+          }
+          return a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' });
+        });
+      }, [resources, reports, debouncedQuery, activeCategory, activeTag, sortKey]);
+
+      const visibleResources = useMemo(() => {
+        return filtered.slice(0, visibleCount);
+      }, [filtered, visibleCount]);
+
+      const handleVote = useCallback(async (resourceId, targetVal) => {
+        const previousVal = userVotes[resourceId] !== undefined ? userVotes[resourceId] : 50;
+        if (previousVal === targetVal) return;
+
+        const prevDelta = (previousVal - 50) / 4;
+        const newDelta = (targetVal - 50) / 4;
+        const diff = Math.round(newDelta - prevDelta);
+
+        // Otimistic update no React
+        setResources((prev) =>
+          prev.map((item) =>
+            item.id === resourceId ? { ...item, score: (item.score || 0) + diff } : item
+          )
+        );
+        setUserVotes((prev) => ({ ...prev, [resourceId]: targetVal }));
+
+        // Grava no Supabase se conectado
+        if (supabaseClient) {
+          try {
+            await supabaseClient.rpc('cast_vote', {
+              p_resource_id: resourceId,
+              p_client_token: clientToken,
+              p_vote_val: targetVal
+            });
+          } catch (e) {
+            console.error('Erro ao gravar voto remoto:', e);
+          }
+        }
+      }, [userVotes, clientToken]);
+
+      function triggerReportModal(id, title) {
+        setReportModalData({ id, title });
+      }
+
+      async function confirmReport() {
+        if (!reportModalData) return;
+        const resourceId = reportModalData.id;
+
+        if (!canPerform('report-' + resourceId, 5000)) {
+          showToast('Já reportou este item recentemente.', 'error');
+          setReportModalData(null);
+          return;
+        }
+
+        setReports((prev) => {
+          const count = (prev[resourceId] || 0) + 1;
+          return { ...prev, [resourceId]: count };
+        });
+
+        if (supabaseClient) {
+          try {
+            await supabaseClient.rpc('report_resource', {
+              p_resource_id: resourceId,
+              p_client_token: clientToken
+            });
+          } catch (e) {
+            console.error('Erro ao reportar no Supabase:', e);
+          }
+        }
+
+        showToast('Denúncia registada. Obrigado pela colaboração!', 'success');
+        setReportModalData(null);
+      }
+
+      async function handleAddResource(newResource) {
+        const item = { ...newResource, id: uuid() };
+        
+        // Se o Supabase estiver conectado, insere na nuvem
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient
+              .from('resources')
+              .insert([{
+                title: item.title,
+                url: item.url,
+                normalized_url: item.normalized_url,
+                category: item.category,
+                description: item.description,
+                tags: item.tags,
+                score: 0
+              }])
+              .select();
+
+            if (error) {
+              showToast('Erro ao gravar no banco de dados: ' + error.message, 'error');
+              return;
+            }
+            if (data && data[0]) {
+              setResources((prev) => [data[0], ...prev]);
+              showToast('Recurso publicado e salvo na nuvem com sucesso!', 'success');
+              return;
+            }
+          } catch (e) {
+            console.error('Falha ao submeter remoto:', e);
+          }
+        }
+
+        // Modo offline / fallback
+        setResources((prev) => [item, ...prev]);
+        showToast('Recurso publicado com sucesso!', 'success');
+      }
+
+      function handleResetData() {
+        setResources(SEED_RESOURCES);
+        setUserVotes({});
+        setReports({});
+        try {
+          localStorage.removeItem('edu-resources-v2');
+          localStorage.removeItem('edu-votes-v2');
+          localStorage.removeItem('edu-reports-v2');
+        } catch (_) {}
+        showToast('Catálogo padrão restaurado com sucesso!', 'info');
+      }
+
+      return (
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/50 text-slate-900">
+          <ToastContainer toasts={toasts} onCloseToast={closeToast} />
+
+          {/* Cabeçalho */}
+          <header className="bg-slate-900 text-white shadow-md">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h1 className="text-lg font-bold tracking-tight">Oficina Pedagógica</h1>
+                  
+                  {/* Status da Conexão Supabase */}
+                  {isSupabaseConfigured ? (
+                    <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      Nuvem Ativa
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-medium px-2 py-0.5 rounded-full" title="Para ativar a sincronização na nuvem, cole a sua Chave Anon no código.">
+                      Modo Local
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400 font-medium">Repositório Colaborativo de Recursos Educativos</p>
+              </div>
+
+              <button
+                onClick={() => setModalOpen(true)}
+                className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                <IcoPlus cls="h-4 w-4" />
+                <span>Indicar Recurso</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Barra de Procura e Filtros */}
+          <TopBar
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            sortKey={sortKey}
+            onSortChange={setSortKey}
+            allTags={allTags}
+            activeTag={activeTag}
+            onTagChange={setActiveTag}
+          />
+
+          <main className="mx-auto max-w-7xl w-full flex-1 px-4 py-5 sm:px-6">
+            <FilterPills active={activeCategory} onChange={setActiveCategory} />
+
+            {activeTag && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500">A filtrar pela tag:</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/70 border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-800">
+                  #{activeTag}
+                  <button
+                    onClick={() => setActiveTag(null)}
+                    className="rounded-full p-0.5 hover:bg-blue-200 text-blue-700 transition"
+                    aria-label="Remover filtro de tag"
+                  >
+                    <IcoX cls="h-3 w-3" />
+                  </button>
+                </span>
+              </div>
+            )}
+
+            <div className="my-4 flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>{filtered.length} recurso{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}</span>
+              {filtered.length > 0 && (
+                <span>A apresentar {Math.min(visibleCount, filtered.length)} de {filtered.length}</span>
+              )}
+            </div>
+
+            {visibleResources.length === 0 ? (
+              <div className="my-16 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white/50 p-12 text-center text-slate-500">
+                <IcoSearchX cls="h-10 w-10 text-slate-400" />
+                <h3 className="text-base font-bold text-slate-800">Nenhum recurso encontrado</h3>
+                <p className="max-w-md text-xs leading-relaxed text-slate-500">
+                  Não foram encontradas ferramentas com os critérios de pesquisa ou tags selecionadas. Experimente redefinir os filtros ou sugerir um novo recurso.
+                </p>
+                <button
+                  onClick={() => { setSearchQuery(''); setActiveCategory(null); setActiveTag(null); }}
+                  className="mt-2 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition"
+                >
+                  Limpar todos os filtros
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {visibleResources.map((resource) => (
+                    <ResourceCard
+                      key={resource.id}
+                      resource={resource}
+                      userVote={userVotes[resource.id]}
+                      onVote={handleVote}
+                      onTagClick={setActiveTag}
+                      onReport={triggerReportModal}
+                    />
+                  ))}
+                </div>
+
+                {visibleCount < filtered.length && (
+                  <div className="mt-10 flex justify-center pb-6">
+                    <button
+                      onClick={() => setVisibleCount((prev) => prev + 12)}
+                      className="rounded-xl border border-slate-200 bg-white px-7 py-3 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    >
+                      Carregar mais recursos ({filtered.length - visibleCount} restantes)
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </main>
+
+          {/* Botão Flutuante (FAB) para Mobile */}
+          <button
+            onClick={() => setModalOpen(true)}
+            className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-xl transition-transform duration-200 hover:bg-blue-500 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-400/40 sm:hidden"
+            aria-label="Sugerir novo recurso educativo"
+          >
+            <IcoPlus cls="h-6 w-6" />
+          </button>
+
+          {/* Modais */}
+          <SubmitModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onSubmit={handleAddResource}
+            categories={CATEGORIES}
+            isDuplicateUrl={isDuplicateUrl}
+          />
+
+          <ReportConfirmModal
+            open={Boolean(reportModalData)}
+            targetResource={reportModalData}
+            onClose={() => setReportModalData(null)}
+            onConfirm={confirmReport}
+          />
+
+          {/* Rodapé */}
+          <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500 mt-auto">
+            <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-left">
+                <p className="font-semibold text-slate-700">Oficina Pedagógica &copy; 2026</p>
+                <p className="mt-0.5">
+                  Idealizado por Andrius Sampaio &bull;{' '}
+                  <a href="mailto:andrius.sampa@gmail.com" className="text-blue-600 hover:underline">
+                    andrius.sampa@gmail.com
+                  </a>
+                </p>
+              </div>
+
+              <div>
+                <button
+                  onClick={handleResetData}
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition"
+                  title="Restaurar lista original de recursos"
+                >
+                  Restaurar dados padrão
+                </button>
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    const rootElement = document.getElementById('root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>
