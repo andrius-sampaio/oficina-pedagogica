@@ -1036,9 +1036,7 @@
 
           // Carrega os votos já feitos por este cliente
           const { data: voteData } = await supabaseClient
-            .from('votes')
-            .select('resource_id, vote_val')
-            .eq('client_token', clientToken);
+            .rpc('get_my_votes', { p_client_token: clientToken });
 
           if (voteData && voteData.length > 0) {
             const voteMap = {};
