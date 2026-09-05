@@ -4,10 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Oficina Pedagógica - Repositório Educativo Aberto</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase Client JS via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Tailwind CSS (Play CDN) - version-pinned.
+       SRI is not applied: the Play CDN generates its bundle dynamically and
+       serves it without CORS headers, so a subresource-integrity hash cannot
+       be verified. Pin the version to avoid silent upstream changes. -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Supabase Client JS via CDN - version-pinned + SRI -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"
+    integrity="sha384-CLZeq1dk8+Uzrs7TVvBUdlFoV5F0DMqgRoeHa8g5wJcuPe5SkVfEvdxB0ZuzlnBQ"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
   <style>
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -61,10 +68,22 @@
 <body class="bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/50 text-slate-900 antialiased min-h-screen flex flex-col font-sans">
   <div id="root" class="flex flex-col min-h-screen"></div>
 
-  <!-- React 18 & Babel para execução autônoma num único ficheiro -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- React 18 & Babel para execução autônoma num único ficheiro - version-pinned + SRI -->
+  <script
+    src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+    integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <script
+    src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+    integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <script
+    src="https://unpkg.com/@babel/standalone@8.0.4/babel.min.js"
+    integrity="sha384-bdF7m0Y1IFKt9Q6xC8X9qkXn0OBriQWKyWwZKYsN05zF6P/g9OakjjL0G2Sd4pB4"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef, useCallback } = React;
