@@ -1199,28 +1199,29 @@
       async function handleAddResource(newResource) {
         const item = { ...newResource, id: uuid() };
         
-        // Se o Supabase estiver conectado, insere na nuvem
+        // Se o Supabase estiver conectado, insere na nuvem via RPC com rate limit
         if (supabaseClient) {
           try {
-            const { data, error } = await supabaseClient
-              .from('resources')
-              .insert([{
-                title: item.title,
-                url: item.url,
-                normalized_url: item.normalized_url,
-                category: item.category,
-                description: item.description,
-                tags: item.tags,
-                score: 0
-              }])
-              .select();
+            const { data, error } = await supabaseClient.rpc('submit_resource', {
+              p_title: item.title,
+              p_url: item.url,
+              p_normalized_url: item.normalized_url,
+              p_category: item.category,
+              p_description: item.description,
+              p_tags: item.tags,
+              p_client_token: clientToken
+            });
 
             if (error) {
-              showToast('Erro ao gravar no banco de dados: ' + error.message, 'error');
+              if (error.message === 'Rate limit exceeded') {
+                showToast('Aguarde alguns segundos antes de submeter outro recurso.', 'error');
+              } else {
+                showToast('Erro ao gravar no banco de dados: ' + error.message, 'error');
+              }
               return;
             }
-            if (data && data[0]) {
-              setResources((prev) => [data[0], ...prev]);
+            if (data) {
+              setResources((prev) => [data, ...prev]);
               showToast('Recurso publicado e salvo na nuvem com sucesso!', 'success');
               return;
             }
