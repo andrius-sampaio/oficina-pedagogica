@@ -463,7 +463,6 @@
     function Thermometer({ resource, userVote, onVote }) {
       const initialVal = userVote !== undefined ? userVote : 50;
       const [val, setVal] = useState(initialVal);
-      const debounceRef = useRef(null);
 
       useEffect(() => {
         if (userVote !== undefined) {
@@ -474,22 +473,14 @@
       const color = getSliderColor(val);
       const communityTemp = scoreToTemp(resource.score);
 
-      const commitVote = useCallback((targetValue) => {
-        onVote(resource.id, targetValue);
-      }, [onVote, resource.id]);
-
       function handleChange(e) {
-        const newVal = parseInt(e.target.value, 10);
-        setVal(newVal);
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-          commitVote(newVal);
-        }, 350);
+        // Atualiza apenas a exibição visual local em tempo real sem emitir voto
+        setVal(parseInt(e.target.value, 10));
       }
 
       function handleCommit() {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        commitVote(val);
+        // Grava o voto somente ao soltar o mouse ou toque
+        onVote(resource.id, val);
       }
 
       return (
@@ -1166,8 +1157,7 @@
     }
 
     // =========================================================================
-    // MODAL DE AUTENTICAÇÃO REAL VIA SUPABASE AUTH (EMAIL + SENHA)
-    // Nenhuma senha é salva ou conferida no front-end!
+    // MODAL DE AUTENTICAÇÃO VIA SUPABASE AUTH (EMAIL + SENHA)
     // =========================================================================
     function AdminAuthModal({ open, actionType, onClose, onSuccess }) {
       const [email, setEmail] = useState('');
@@ -1195,13 +1185,12 @@
         setErrorMsg('');
 
         if (!supabaseClient) {
-          setErrorMsg('Supabase não conectado. Verifique as chaves.');
+          setErrorMsg('Supabase não conectado. Verifique a configuração.');
           setChecking(false);
           return;
         }
 
         try {
-          // Autenticação oficial com o Supabase Auth
           const { data, error } = await supabaseClient.auth.signInWithPassword({
             email: email.trim(),
             password: password
@@ -1697,7 +1686,8 @@
         return resources.some((r) => r.normalized_url === norm);
       }, [resources]);
 
-      const filtered = useMemo(() => {
+      // 1. Ordem base estável dos IDs: só recalcula a posição quando houver busca, filtro ou troca manual de ordenação
+      const sortedResourceIds = useMemo(() => {
         const q = debouncedQuery ? debouncedQuery.toLowerCase().trim() : '';
 
         const list = resources.filter((r) => {
@@ -1713,7 +1703,7 @@
           return true;
         });
 
-        return list.sort((a, b) => {
+        list.sort((a, b) => {
           if (sortKey === 'hot') {
             return (b.score - a.score) || b.created_at.localeCompare(a.created_at);
           }
@@ -1722,7 +1712,17 @@
           }
           return a.title.localeCompare(b.title, 'pt', { sensitivity: 'base' });
         });
-      }, [resources, reports, debouncedQuery, activeCategory, activeTag, sortKey]);
+
+        return list.map((r) => r.id);
+      }, [debouncedQuery, activeCategory, activeTag, sortKey, reports]);
+
+      // 2. Vincula os dados atualizados aos IDs fixados (impede que o card fuja do lugar ao receber voto)
+      const filtered = useMemo(() => {
+        const resourceMap = new Map(resources.map((r) => [r.id, r]));
+        return sortedResourceIds
+          .map((id) => resourceMap.get(id))
+          .filter(Boolean);
+      }, [sortedResourceIds, resources]);
 
       const visibleResources = useMemo(() => {
         return filtered.slice(0, visibleCount);
