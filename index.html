@@ -4,12 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Oficina Pedagógica - Repositório Educativo Aberto</title>
-  <!-- Tailwind CSS (Play CDN) - version-pinned.
-       SRI is not applied: the Play CDN generates its bundle dynamically and
-       serves it without CORS headers, so a subresource-integrity hash cannot
-       be verified. Pin the version to avoid silent upstream changes. -->
+  <!-- Tailwind CSS (Play CDN) -->
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <!-- Supabase Client JS via CDN - version-pinned + SRI -->
+  <!-- Supabase Client JS via CDN -->
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"
     integrity="sha384-CLZeq1dk8+Uzrs7TVvBUdlFoV5F0DMqgRoeHa8g5wJcuPe5SkVfEvdxB0ZuzlnBQ"
@@ -68,7 +65,7 @@
 <body class="bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/50 text-slate-900 antialiased min-h-screen flex flex-col font-sans">
   <div id="root" class="flex flex-col min-h-screen"></div>
 
-  <!-- React 18 & Babel para execução autônoma num único ficheiro - version-pinned + SRI -->
+  <!-- React 18 & Babel -->
   <script
     src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
     integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
@@ -90,12 +87,10 @@
 
     // =========================================================================
     // CONFIGURAÇÃO DO SUPABASE
-    // Conexão integrada e ativa com o banco PostgreSQL na nuvem
     // =========================================================================
     const SUPABASE_URL = 'https://cdlrdveezmyrmjrpxckm.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_7hCiZLB5zM1IJ2HLsHPo4A_QU3IEid-';
 
-    // Inicialização segura do cliente Supabase
     const isSupabaseConfigured = Boolean(
       SUPABASE_URL && 
       SUPABASE_ANON_KEY && 
@@ -112,7 +107,6 @@
       }
     }
 
-    // Identificador único do usuário anônimo (para votação justa)
     function getOrCreateClientToken() {
       try {
         let token = localStorage.getItem('edu-client-token');
@@ -293,6 +287,70 @@
         </svg>
       );
     }
+    function IcoSend({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <line x1="22" y1="2" x2="11" y2="13" />
+          <polygon points="22 2 15 22 11 13 2 9 22 2" />
+        </Icon>
+      );
+    }
+    function IcoEdit({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+        </Icon>
+      );
+    }
+    function IcoTrash({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </Icon>
+      );
+    }
+    function IcoFlag({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+          <line x1="4" y1="22" x2="4" y2="15" />
+        </Icon>
+      );
+    }
+    function IcoLock({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </Icon>
+      );
+    }
+    function IcoEye({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </Icon>
+      );
+    }
+    function IcoEyeOff({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </Icon>
+      );
+    }
+    function IcoUserCheck({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="8.5" cy="7" r="4" />
+          <polyline points="17 11 19 13 23 9" />
+        </Icon>
+      );
+    }
 
     function InfoTooltip({ text }) {
       const [isOpen, setIsOpen] = useState(false);
@@ -356,7 +414,7 @@
     function ToastContainer({ toasts, onCloseToast }) {
       if (!toasts.length) return null;
       return (
-        <div className="fixed top-4 right-4 z-[120] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+        <div className="fixed top-4 right-4 z-[140] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
           {toasts.map((toast) => (
             <div
               key={toast.id}
@@ -483,7 +541,7 @@
       );
     }
 
-    function ResourceCard({ resource, userVote, onVote, onTagClick, onReport }) {
+    function ResourceCard({ resource, userVote, onVote, onTagClick, onDenounce, onReport, onAdminAction }) {
       const [menuOpen, setMenuOpen] = useState(false);
       const [evalOpen, setEvalOpen] = useState(false);
       const menuRef = useRef(null);
@@ -559,18 +617,67 @@
                   </button>
 
                   {menuOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 w-60 rounded-xl border border-slate-200 bg-white p-1 shadow-xl z-40">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          onReport(resource.id, resource.title);
-                        }}
-                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 transition"
-                      >
-                        <IcoAlert cls="h-3.5 w-3.5 shrink-0" />
-                        <span>Denunciar recurso impróprio ou quebrado</span>
-                      </button>
+                    <div className="absolute right-0 top-full mt-1.5 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-40 divide-y divide-slate-100">
+                      <div className="py-1">
+                        {/* Denunciar */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            onDenounce(resource.id, resource.title);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-amber-700 hover:bg-amber-50 transition"
+                        >
+                          <IcoAlert cls="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                          <span>Denunciar</span>
+                        </button>
+
+                        {/* Reportar ao Administrador */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            onReport(resource);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-blue-700 hover:bg-blue-50 transition"
+                        >
+                          <IcoFlag cls="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                          <span>Reportar ao Administrador</span>
+                        </button>
+                      </div>
+
+                      {/* Funções Administrativas */}
+                      <div className="py-1">
+                        <span className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
+                          Administração
+                        </span>
+                        
+                        {/* Editar */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            onAdminAction('edit', resource);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 transition"
+                        >
+                          <IcoEdit cls="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                          <span>Editar</span>
+                        </button>
+
+                        {/* Excluir */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            onAdminAction('delete', resource);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                        >
+                          <IcoTrash cls="h-3.5 w-3.5 shrink-0 text-red-500" />
+                          <span>Excluir</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -945,8 +1052,8 @@
           aria-modal="true"
         >
           <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div className="flex items-center gap-3 mb-3 text-red-600">
-              <IcoAlert cls="h-6 w-6" />
+            <div className="flex items-center gap-3 mb-3 text-amber-600">
+              <IcoAlert cls="h-6 w-6 text-amber-500" />
               <h3 className="text-base font-bold text-slate-900">Denunciar Recurso</h3>
             </div>
             <p className="text-xs leading-relaxed text-slate-600 mb-4">
@@ -961,9 +1068,463 @@
               </button>
               <button
                 onClick={onConfirm}
-                className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 shadow-sm transition"
+                className="rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-700 shadow-sm transition"
               >
                 Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // MODAL DE REPORTAR (FEEDBACK DIRETO VIA EMAIL)
+    // =========================================================================
+    function FeedbackReportModal({ open, resource, onClose, onSend }) {
+      const [reason, setReason] = useState('');
+
+      useEffect(() => {
+        if (!open) setReason('');
+      }, [open]);
+
+      if (!open || !resource) return null;
+
+      function handleSend(e) {
+        e.preventDefault();
+        if (!reason.trim()) return;
+        onSend(resource, reason.trim());
+      }
+
+      return (
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+                  <IcoFlag cls="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Reportar Recurso</h3>
+                  <p className="text-xs text-slate-500">Enviar mensagem direta ao administrador</p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-xl p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <IcoX cls="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSend}>
+              <div className="mb-3">
+                <span className="text-xs font-semibold text-slate-700 block mb-1">Recurso:</span>
+                <p className="text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-slate-800 font-medium truncate">
+                  {resource.title} <span className="text-slate-400 font-normal">({resource.url})</span>
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Explique em poucas palavras o que quer reportar:
+                </label>
+                <textarea
+                  rows={4}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Ex: O link está quebrado, conteúdo pago que era gratuito, alteração de regras..."
+                  className="w-full rounded-xl border border-slate-200 p-3 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition"
+                >
+                  <span>Enviar</span>
+                  <IcoSend cls="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // MODAL DE AUTENTICAÇÃO REAL VIA SUPABASE AUTH (EMAIL + SENHA)
+    // Nenhuma senha é salva ou conferida no front-end!
+    // =========================================================================
+    function AdminAuthModal({ open, actionType, onClose, onSuccess }) {
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [showPassword, setShowPassword] = useState(false);
+      const [errorMsg, setErrorMsg] = useState('');
+      const [checking, setChecking] = useState(false);
+
+      useEffect(() => {
+        if (!open) {
+          setEmail('');
+          setPassword('');
+          setShowPassword(false);
+          setErrorMsg('');
+          setChecking(false);
+        }
+      }, [open]);
+
+      if (!open) return null;
+
+      async function handleSubmit(e) {
+        e.preventDefault();
+        if (!email.trim() || !password) return;
+        setChecking(true);
+        setErrorMsg('');
+
+        if (!supabaseClient) {
+          setErrorMsg('Supabase não conectado. Verifique as chaves.');
+          setChecking(false);
+          return;
+        }
+
+        try {
+          // Autenticação oficial com o Supabase Auth
+          const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email.trim(),
+            password: password
+          });
+
+          if (error) {
+            setErrorMsg(error.message === 'Invalid login credentials' 
+              ? 'E-mail ou senha incorretos no Supabase.' 
+              : error.message);
+            setChecking(false);
+            return;
+          }
+
+          if (data && data.user) {
+            onSuccess(data.user);
+          }
+        } catch (err) {
+          setErrorMsg('Erro de rede ou falha ao autenticar.');
+        } finally {
+          setChecking(false);
+        }
+      }
+
+      return (
+        <div 
+          className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-3 text-slate-900">
+              <div className="rounded-xl bg-slate-100 p-2.5 text-slate-700">
+                <IcoLock cls="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Acesso Administrativo</h3>
+                <p className="text-xs text-slate-500">
+                  {actionType === 'delete' ? 'Autorizar exclusão' : 'Autorizar edição'}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+              Autentique-se com a sua conta de administrador do Supabase.
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  E-mail do Administrador
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errorMsg) setErrorMsg('');
+                  }}
+                  placeholder="exemplo@dominio.com"
+                  autoFocus
+                  required
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 text-sm outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Senha
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errorMsg) setErrorMsg('');
+                    }}
+                    placeholder="Sua senha do Supabase..."
+                    required
+                    className={`h-10 w-full rounded-xl border bg-slate-50/70 pl-3.5 pr-10 text-sm outline-none transition focus:bg-white ${
+                      errorMsg ? 'border-red-500 ring-2 ring-red-500/20' : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 transition"
+                    title={showPassword ? 'Ocultar senha' : 'Ver senha'}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Ver senha'}
+                  >
+                    {showPassword ? <IcoEyeOff cls="h-4 w-4" /> : <IcoEye cls="h-4 w-4" />}
+                  </button>
+                </div>
+                {errorMsg && (
+                  <span className="text-[11px] font-medium text-red-600 mt-1 block">
+                    {errorMsg}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={checking}
+                  className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition disabled:opacity-50"
+                >
+                  {checking ? 'A autenticar...' : 'Entrar e Continuar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // MODAL DE EDIÇÃO DO RECURSO (ADMIN)
+    // =========================================================================
+    function EditResourceModal({ open, resource, onClose, onSave, categories }) {
+      const [form, setForm] = useState({ title: '', url: '', category: '', tags: '', description: '' });
+      const [errors, setErrors] = useState({});
+      const [saving, setSaving] = useState(false);
+
+      useEffect(() => {
+        if (resource && open) {
+          setForm({
+            title: resource.title || '',
+            url: resource.url || '',
+            category: resource.category || '',
+            tags: Array.isArray(resource.tags) ? resource.tags.join(', ') : '',
+            description: resource.description || ''
+          });
+          setErrors({});
+          setSaving(false);
+        }
+      }, [resource, open]);
+
+      if (!open || !resource) return null;
+
+      function validate() {
+        const e = {};
+        const title = sanitize(form.title);
+        const description = sanitize(form.description);
+        const url = form.url.trim();
+
+        if (title.length < 3 || title.length > 80) e.title = 'O título deve ter entre 3 e 80 carateres.';
+        if (!isValidHttpsUrl(url)) e.url = 'Insira um URL válido que inicie com https://';
+        if (!form.category) e.category = 'Selecione uma categoria.';
+        if (description.length < 10 || description.length > 150) e.description = 'A descrição deve ter entre 10 e 150 carateres.';
+
+        setErrors(e);
+        return Object.keys(e).length === 0;
+      }
+
+      async function handleSubmit(e) {
+        e.preventDefault();
+        if (!validate()) return;
+
+        setSaving(true);
+        const tagsArray = sanitize(form.tags)
+          .split(',')
+          .map((s) => s.trim().toLowerCase().replace(/^#/, ''))
+          .filter((s) => s.length > 1)
+          .slice(0, 5);
+
+        const updated = {
+          ...resource,
+          title: sanitize(form.title),
+          url: form.url.trim(),
+          normalized_url: normalizeUrl(form.url),
+          category: form.category,
+          description: sanitize(form.description),
+          tags: tagsArray
+        };
+
+        await onSave(updated);
+        setSaving(false);
+        onClose();
+      }
+
+      return (
+        <div 
+          className="fixed inset-0 z-[125] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Editar Recurso</h2>
+                <p className="text-xs text-slate-500">Alteração autorizada de metadados do card</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <IcoX cls="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Título *</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
+                  className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
+                />
+                {errors.title && <span className="text-xs text-red-600">{errors.title}</span>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">URL Seguro (HTTPS) *</label>
+                <input
+                  type="url"
+                  value={form.url}
+                  onChange={(e) => setForm((s) => ({ ...s, url: e.target.value }))}
+                  className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
+                />
+                {errors.url && <span className="text-xs text-red-600">{errors.url}</span>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Categoria *</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))}
+                  className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500"
+                >
+                  <option value="">Selecione...</option>
+                  {categories.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.label}</option>
+                  ))}
+                </select>
+                {errors.category && <span className="text-xs text-red-600">{errors.category}</span>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Tags (separadas por vírgulas)</label>
+                <input
+                  type="text"
+                  value={form.tags}
+                  onChange={(e) => setForm((s) => ({ ...s, tags: e.target.value }))}
+                  className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">Descrição *</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
+                  rows={3}
+                  maxLength={150}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 text-sm outline-none focus:border-blue-500 focus:bg-white resize-none"
+                />
+                <div className="flex justify-between text-xs text-slate-400">
+                  {errors.description ? <span className="text-red-600 font-medium">{errors.description}</span> : <span />}
+                  <span>{form.description.length}/150</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {saving ? 'A guardar...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // MODAL DE CONFIRMAÇÃO DE EXCLUSÃO (ADMIN)
+    // =========================================================================
+    function DeleteConfirmModal({ open, resource, onClose, onConfirm }) {
+      if (!open || !resource) return null;
+      return (
+        <div 
+          className="fixed inset-0 z-[125] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="flex items-center gap-3 mb-3 text-red-600">
+              <IcoTrash cls="h-6 w-6" />
+              <h3 className="text-base font-bold text-slate-900">Excluir Card</h3>
+            </div>
+            <p className="text-xs leading-relaxed text-slate-600 mb-4">
+              Tem a certeza de que pretende excluir definitivamente o recurso <strong>"{resource.title}"</strong>? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={onClose}
+                className="rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={onConfirm}
+                className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 shadow-sm transition"
+              >
+                Excluir Definitivamente
               </button>
             </div>
           </div>
@@ -999,6 +1560,7 @@
         }
       });
 
+      const [currentUser, setCurrentUser] = useState(null);
       const [searchQuery, setSearchQuery] = useState('');
       const [debouncedQuery, setDebouncedQuery] = useState('');
       const [activeCategory, setActiveCategory] = useState(null);
@@ -1006,7 +1568,12 @@
       const [sortKey, setSortKey] = useState('hot');
       const [visibleCount, setVisibleCount] = useState(12);
       const [modalOpen, setModalOpen] = useState(false);
-      const [reportModalData, setReportModalData] = useState(null);
+      const [denounceModalData, setDenounceModalData] = useState(null);
+      const [feedbackModalResource, setFeedbackModalResource] = useState(null);
+      const [adminAuthModal, setAdminAuthModal] = useState({ open: false, actionType: null, resource: null });
+      const [editResourceData, setEditResourceData] = useState(null);
+      const [deleteResourceData, setDeleteResourceData] = useState(null);
+
       const [toasts, setToasts] = useState([]);
       const [isSyncing, setIsSyncing] = useState(false);
 
@@ -1024,6 +1591,21 @@
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, []);
 
+      // Monitora sessão ativa do Supabase Auth
+      useEffect(() => {
+        if (!supabaseClient) return;
+
+        supabaseClient.auth.getSession().then(({ data: { session } }) => {
+          setCurrentUser(session?.user ?? null);
+        });
+
+        const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+          setCurrentUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+      }, []);
+
       const fetchSupabaseData = useCallback(async () => {
         if (!supabaseClient) return;
         setIsSyncing(true);
@@ -1039,7 +1621,6 @@
           } else if (data && data.length > 0) {
             setResources(data);
           } else if (data && data.length === 0) {
-            // Se a tabela estiver vazia, sincroniza a semente inicial no banco
             for (const item of SEED_RESOURCES) {
               await supabaseClient.from('resources').upsert({
                 title: item.title,
@@ -1053,7 +1634,6 @@
             }
           }
 
-          // Carrega os votos já feitos por este cliente
           const { data: voteData } = await supabaseClient
             .rpc('get_my_votes', { p_client_token: clientToken });
 
@@ -1075,7 +1655,6 @@
         }
       }, [fetchSupabaseData]);
 
-      // Backup local sempre ativo
       useEffect(() => {
         try {
           localStorage.setItem('edu-resources-v2', JSON.stringify(resources));
@@ -1157,7 +1736,6 @@
         const newDelta = (targetVal - 50) / 4;
         const diff = Math.round(newDelta - prevDelta);
 
-        // Otimistic update no React
         setResources((prev) =>
           prev.map((item) =>
             item.id === resourceId ? { ...item, score: (item.score || 0) + diff } : item
@@ -1165,7 +1743,6 @@
         );
         setUserVotes((prev) => ({ ...prev, [resourceId]: targetVal }));
 
-        // Grava no Supabase se conectado
         if (supabaseClient) {
           try {
             await supabaseClient.rpc('cast_vote', {
@@ -1179,17 +1756,18 @@
         }
       }, [userVotes, clientToken]);
 
-      function triggerReportModal(id, title) {
-        setReportModalData({ id, title });
+      // Denunciar
+      function triggerDenounceModal(id, title) {
+        setDenounceModalData({ id, title });
       }
 
-      async function confirmReport() {
-        if (!reportModalData) return;
-        const resourceId = reportModalData.id;
+      async function confirmDenounce() {
+        if (!denounceModalData) return;
+        const resourceId = denounceModalData.id;
 
-        if (!canPerform('report-' + resourceId, 5000)) {
+        if (!canPerform('denounce-' + resourceId, 5000)) {
           showToast('Já reportou este item recentemente.', 'error');
-          setReportModalData(null);
+          setDenounceModalData(null);
           return;
         }
 
@@ -1205,18 +1783,115 @@
               p_client_token: clientToken
             });
           } catch (e) {
-            console.error('Erro ao reportar no Supabase:', e);
+            console.error('Erro ao denunciar no Supabase:', e);
           }
         }
 
-        showToast('Denúncia registada. Obrigado pela colaboração!', 'success');
-        setReportModalData(null);
+        showToast('Denúncia registada com sucesso!', 'success');
+        setDenounceModalData(null);
+      }
+
+      // Reportar ao administrador (envio de email)
+      function triggerReportModal(resource) {
+        setFeedbackModalResource(resource);
+      }
+
+      function handleSendReport(resource, message) {
+        const targetEmail = 'andrius.sampa@gmail.com';
+        const subject = encodeURIComponent(`[Oficina Pedagógica] Reporte sobre: ${resource.title}`);
+        const body = encodeURIComponent(
+          `Olá Administrador,\n\nUm usuário enviou uma mensagem a respeito do recurso abaixo:\n\n` +
+          `• Título: ${resource.title}\n` +
+          `• URL: ${resource.url}\n` +
+          `• Categoria: ${resource.category}\n\n` +
+          `Mensagem do usuário:\n"${message}"\n\n` +
+          `---\nEnviado através da plataforma Oficina Pedagógica.`
+        );
+
+        window.open(`mailto:${targetEmail}?subject=${subject}&body=${body}`, '_blank');
+        showToast('O seu cliente de e-mail foi aberto para envio.', 'success');
+        setFeedbackModalResource(null);
+      }
+
+      // Ações administrativas: se já estiver logado, prossegue; senão, pede credenciais
+      function handleAdminAction(type, resource) {
+        if (currentUser) {
+          if (type === 'edit') setEditResourceData(resource);
+          if (type === 'delete') setDeleteResourceData(resource);
+        } else {
+          setAdminAuthModal({ open: true, actionType: type, resource });
+        }
+      }
+
+      function handleAdminAuthSuccess(user) {
+        setCurrentUser(user);
+        const { actionType, resource } = adminAuthModal;
+        setAdminAuthModal({ open: false, actionType: null, resource: null });
+        showToast('Autenticado com sucesso como administrador!', 'success');
+
+        if (actionType === 'edit') {
+          setEditResourceData(resource);
+        } else if (actionType === 'delete') {
+          setDeleteResourceData(resource);
+        }
+      }
+
+      async function handleAdminLogout() {
+        if (supabaseClient) {
+          await supabaseClient.auth.signOut();
+        }
+        setCurrentUser(null);
+        showToast('Sessão administrativa encerrada.', 'info');
+      }
+
+      async function handleSaveEditedResource(updated) {
+        setResources((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+
+        if (supabaseClient) {
+          try {
+            await supabaseClient
+              .from('resources')
+              .update({
+                title: updated.title,
+                url: updated.url,
+                normalized_url: updated.normalized_url,
+                category: updated.category,
+                description: updated.description,
+                tags: updated.tags
+              })
+              .eq('id', updated.id);
+          } catch (e) {
+            console.error('Erro ao atualizar no Supabase:', e);
+          }
+        }
+
+        showToast('Recurso atualizado com sucesso!', 'success');
+      }
+
+      async function handleConfirmDelete() {
+        if (!deleteResourceData) return;
+        const resourceId = deleteResourceData.id;
+
+        setResources((prev) => prev.filter((item) => item.id !== resourceId));
+
+        if (supabaseClient) {
+          try {
+            await supabaseClient
+              .from('resources')
+              .delete()
+              .eq('id', resourceId);
+          } catch (e) {
+            console.error('Erro ao excluir no Supabase:', e);
+          }
+        }
+
+        showToast('Recurso excluído com sucesso!', 'info');
+        setDeleteResourceData(null);
       }
 
       async function handleAddResource(newResource) {
         const item = { ...newResource, id: uuid() };
         
-        // Se o Supabase estiver conectado, insere na nuvem via RPC com rate limit
         if (supabaseClient) {
           try {
             const { data, error } = await supabaseClient.rpc('submit_resource', {
@@ -1247,7 +1922,6 @@
           }
         }
 
-        // Modo offline / fallback
         setResources((prev) => [item, ...prev]);
         showToast('Recurso publicado com sucesso!', 'success');
       }
@@ -1275,15 +1949,21 @@
                 <div className="flex items-center gap-2.5">
                   <h1 className="text-lg font-bold tracking-tight">Oficina Pedagógica</h1>
                   
-                  {/* Status da Conexão Supabase */}
                   {isSupabaseConfigured ? (
                     <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                       Nuvem Ativa
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-medium px-2 py-0.5 rounded-full" title="Para ativar a sincronização na nuvem, cole a sua Chave Anon no código.">
+                    <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-medium px-2 py-0.5 rounded-full">
                       Modo Local
+                    </span>
+                  )}
+
+                  {currentUser && (
+                    <span className="inline-flex items-center gap-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                      <IcoUserCheck cls="h-3 w-3" />
+                      Admin Conectado
                     </span>
                   )}
                 </div>
@@ -1361,7 +2041,9 @@
                       userVote={userVotes[resource.id]}
                       onVote={handleVote}
                       onTagClick={setActiveTag}
+                      onDenounce={triggerDenounceModal}
                       onReport={triggerReportModal}
+                      onAdminAction={handleAdminAction}
                     />
                   ))}
                 </div>
@@ -1389,7 +2071,7 @@
             <IcoPlus cls="h-6 w-6" />
           </button>
 
-          {/* Modais */}
+          {/* Modais da Aplicação */}
           <SubmitModal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
@@ -1399,10 +2081,39 @@
           />
 
           <ReportConfirmModal
-            open={Boolean(reportModalData)}
-            targetResource={reportModalData}
-            onClose={() => setReportModalData(null)}
-            onConfirm={confirmReport}
+            open={Boolean(denounceModalData)}
+            targetResource={denounceModalData}
+            onClose={() => setDenounceModalData(null)}
+            onConfirm={confirmDenounce}
+          />
+
+          <FeedbackReportModal
+            open={Boolean(feedbackModalResource)}
+            resource={feedbackModalResource}
+            onClose={() => setFeedbackModalResource(null)}
+            onSend={handleSendReport}
+          />
+
+          <AdminAuthModal
+            open={adminAuthModal.open}
+            actionType={adminAuthModal.actionType}
+            onClose={() => setAdminAuthModal({ open: false, actionType: null, resource: null })}
+            onSuccess={handleAdminAuthSuccess}
+          />
+
+          <EditResourceModal
+            open={Boolean(editResourceData)}
+            resource={editResourceData}
+            categories={CATEGORIES}
+            onClose={() => setEditResourceData(null)}
+            onSave={handleSaveEditedResource}
+          />
+
+          <DeleteConfirmModal
+            open={Boolean(deleteResourceData)}
+            resource={deleteResourceData}
+            onClose={() => setDeleteResourceData(null)}
+            onConfirm={handleConfirmDelete}
           />
 
           {/* Rodapé */}
@@ -1418,7 +2129,17 @@
                 </p>
               </div>
 
-              <div>
+              <div className="flex items-center gap-3">
+                {currentUser && (
+                  <button
+                    onClick={handleAdminLogout}
+                    className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition"
+                    title="Encerrar sessão de administrador"
+                  >
+                    Encerrar Sessão ({currentUser.email})
+                  </button>
+                )}
+
                 <button
                   onClick={handleResetData}
                   className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition"
