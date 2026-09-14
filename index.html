@@ -351,6 +351,28 @@
         </Icon>
       );
     }
+    function IcoLayoutGrid({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        </Icon>
+      );
+    }
+    function IcoList({ cls }) {
+      return (
+        <Icon cls={cls}>
+          <line x1="8" y1="6" x2="21" y2="6" />
+          <line x1="8" y1="12" x2="21" y2="12" />
+          <line x1="8" y1="18" x2="21" y2="18" />
+          <line x1="3" y1="6" x2="3.01" y2="6" />
+          <line x1="3" y1="12" x2="3.01" y2="12" />
+          <line x1="3" y1="18" x2="3.01" y2="18" />
+        </Icon>
+      );
+    }
 
     function InfoTooltip({ text }) {
       const [isOpen, setIsOpen] = useState(false);
@@ -749,6 +771,200 @@
       );
     }
 
+    // =========================================================================
+    // CARD EM MODO LISTA COMPACTA
+    // =========================================================================
+    function ResourceListItem({ resource, userVote, onVote, onTagClick, onDenounce, onReport, onAdminAction }) {
+      const [menuOpen, setMenuOpen] = useState(false);
+      const [evalOpen, setEvalOpen] = useState(false);
+      const menuRef = useRef(null);
+
+      const domain = useMemo(() => {
+        try { return new URL(resource.url).hostname; } catch (e) { return ''; }
+      }, [resource.url]);
+
+      const communityTemp = useMemo(() => scoreToTemp(resource.score), [resource.score]);
+
+      useEffect(() => {
+        if (!menuOpen) return;
+        function handleClickOutside(e) {
+          if (menuRef.current && !menuRef.current.contains(e.target)) {
+            setMenuOpen(false);
+          }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+          document.removeEventListener('touchstart', handleClickOutside);
+        };
+      }, [menuOpen]);
+
+      return (
+        <article className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+
+            {/* Identificação + descrição */}
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <ResourceFavicon domain={domain} />
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <h3 className="truncate text-sm font-bold text-slate-900" title={resource.title}>
+                    {resource.title}
+                  </h3>
+                  <span className="shrink-0 rounded-full border border-slate-200/60 bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                    {resource.category}
+                  </span>
+                </div>
+
+                <span className="block truncate text-[11px] text-slate-400">
+                  {domain.replace('www.', '')}
+                </span>
+
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">
+                  {resource.description}
+                </p>
+
+                {resource.tags && resource.tags.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Tags do recurso">
+                    {resource.tags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => onTagClick(tag)}
+                        className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+                        title={`Filtrar por #${tag}`}
+                      >
+                        #{tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Ações */}
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setEvalOpen((prev) => !prev)}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                  evalOpen
+                    ? 'border-blue-300 bg-blue-50/70 text-blue-800 shadow-2xs'
+                    : 'border-slate-200 bg-slate-50/80 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+                aria-expanded={evalOpen}
+                title="Avaliar este recurso"
+              >
+                <IcoThermometer cls={`h-3.5 w-3.5 ${evalOpen ? 'text-blue-600' : 'text-slate-500'}`} />
+                <span className="hidden sm:inline">Avaliar</span>
+                <span className="rounded border border-slate-200/80 bg-white px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-slate-600">
+                  {communityTemp}°
+                </span>
+                <IcoChevronDown
+                  cls={`h-3.5 w-3.5 transition-transform duration-200 ${
+                    evalOpen ? 'text-blue-600' : 'rotate-180 text-slate-400'
+                  }`}
+                />
+              </button>
+
+              <a
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                <span>Acessar</span>
+                <IcoLink cls="h-3.5 w-3.5 text-slate-400" />
+              </a>
+
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                  title="Mais opções"
+                  aria-label={`Mais opções para ${resource.title}`}
+                  aria-expanded={menuOpen}
+                >
+                  <IcoMoreVertical cls="h-4 w-4" />
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 top-full z-40 mt-1.5 w-56 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                    <div className="py-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onDenounce(resource.id, resource.title);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-amber-700 transition hover:bg-amber-50"
+                      >
+                        <IcoAlert cls="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                        <span>Denunciar</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onReport(resource);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-blue-700 transition hover:bg-blue-50"
+                      >
+                        <IcoFlag cls="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                        <span>Reportar ao Administrador</span>
+                      </button>
+                    </div>
+
+                    <div className="py-1">
+                      <span className="block px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                        Administração
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onAdminAction('edit', resource);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        <IcoEdit cls="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                        <span>Editar</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onAdminAction('delete', resource);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-red-600 transition hover:bg-red-50"
+                      >
+                        <IcoTrash cls="h-3.5 w-3.5 shrink-0 text-red-500" />
+                        <span>Excluir</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {evalOpen && (
+            <div className="mt-3 animate-in fade-in duration-200 sm:pl-9">
+              <Thermometer
+                resource={resource}
+                userVote={userVote}
+                onVote={onVote}
+              />
+            </div>
+          )}
+        </article>
+      );
+    }
+
     function FilterPills({ active, onChange }) {
       return (
         <div 
@@ -787,7 +1003,9 @@
       );
     }
 
-    function TopBar({ query, onQueryChange, sortKey, onSortChange, allTags, activeTag, onTagChange }) {
+    function TopBar({ query, onQueryChange, sortKey, onSortChange, allTags, activeTag, onTagChange, viewMode, onViewChange }) {
+      const viewButtonBase = "inline-flex h-9 w-9 items-center justify-center rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
       return (
         <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-md shadow-2xs">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center">
@@ -801,7 +1019,7 @@
                 className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <select
                 value={activeTag || ''}
                 onChange={(e) => onTagChange(e.target.value || null)}
@@ -824,6 +1042,41 @@
                 <option value="recent">Mais Recentes 🕒</option>
                 <option value="alpha">Ordem Alfabética (A-Z)</option>
               </select>
+
+              <div
+                className="flex shrink-0 items-center gap-0.5 rounded-xl border border-slate-200 bg-white p-0.5"
+                role="group"
+                aria-label="Modo de visualização"
+              >
+                <button
+                  type="button"
+                  onClick={() => onViewChange('grid')}
+                  aria-pressed={viewMode === 'grid'}
+                  title="Visualização em grelha"
+                  aria-label="Visualização em grelha"
+                  className={`${viewButtonBase} ${
+                    viewMode === 'grid'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                  }`}
+                >
+                  <IcoLayoutGrid cls="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onViewChange('list')}
+                  aria-pressed={viewMode === 'list'}
+                  title="Visualização em lista compacta"
+                  aria-label="Visualização em lista compacta"
+                  className={`${viewButtonBase} ${
+                    viewMode === 'list'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                  }`}
+                >
+                  <IcoList cls="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1555,6 +1808,13 @@
       const [activeCategory, setActiveCategory] = useState(null);
       const [activeTag, setActiveTag] = useState(null);
       const [sortKey, setSortKey] = useState('hot');
+      const [viewMode, setViewMode] = useState(() => {
+        try {
+          return localStorage.getItem('edu-view-mode') || 'grid';
+        } catch (e) {
+          return 'grid';
+        }
+      });
       const [visibleCount, setVisibleCount] = useState(12);
       const [modalOpen, setModalOpen] = useState(false);
       const [denounceModalData, setDenounceModalData] = useState(null);
@@ -1661,6 +1921,12 @@
           localStorage.setItem('edu-reports-v2', JSON.stringify(reports));
         } catch (e) {}
       }, [reports]);
+
+      useEffect(() => {
+        try {
+          localStorage.setItem('edu-view-mode', viewMode);
+        } catch (e) {}
+      }, [viewMode]);
 
       useEffect(() => {
         const timer = setTimeout(() => setDebouncedQuery(searchQuery), 250);
@@ -1989,6 +2255,8 @@
             allTags={allTags}
             activeTag={activeTag}
             onTagChange={setActiveTag}
+            viewMode={viewMode}
+            onViewChange={setViewMode}
           />
 
           <main className="mx-auto max-w-7xl w-full flex-1 px-4 py-5 sm:px-6">
@@ -2033,20 +2301,37 @@
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {visibleResources.map((resource) => (
-                    <ResourceCard
-                      key={resource.id}
-                      resource={resource}
-                      userVote={userVotes[resource.id]}
-                      onVote={handleVote}
-                      onTagClick={setActiveTag}
-                      onDenounce={triggerDenounceModal}
-                      onReport={triggerReportModal}
-                      onAdminAction={handleAdminAction}
-                    />
-                  ))}
-                </div>
+                {viewMode === 'list' ? (
+                  <div className="flex flex-col gap-3">
+                    {visibleResources.map((resource) => (
+                      <ResourceListItem
+                        key={resource.id}
+                        resource={resource}
+                        userVote={userVotes[resource.id]}
+                        onVote={handleVote}
+                        onTagClick={setActiveTag}
+                        onDenounce={triggerDenounceModal}
+                        onReport={triggerReportModal}
+                        onAdminAction={handleAdminAction}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {visibleResources.map((resource) => (
+                      <ResourceCard
+                        key={resource.id}
+                        resource={resource}
+                        userVote={userVotes[resource.id]}
+                        onVote={handleVote}
+                        onTagClick={setActiveTag}
+                        onDenounce={triggerDenounceModal}
+                        onReport={triggerReportModal}
+                        onAdminAction={handleAdminAction}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 {visibleCount < filtered.length && (
                   <div className="mt-10 flex justify-center pb-6">
@@ -2160,3 +2445,4 @@
   </script>
 </body>
 </html>
+
